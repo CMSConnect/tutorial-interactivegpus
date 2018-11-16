@@ -1,0 +1,38 @@
+Universe = vanilla 
+
+# Walltime for job in minutes
+# Default ~8 hours
+MaxTimeMins = 500
+
+# Set job classad for Global Pool
++MaxWallTimeMins = $(MaxTimeMins)
+
+Executable = sleep.sh
+Arguments = $(MaxTimeMins)
+
+Error = /dev/null
+Output = /dev/null
+Log = /dev/null
+
+transfer_input_files = singularity_wrapper.sh
++WantIOProxy=true
+
+# GPU Sites
+# Temporarily excluding Vanderbilt until they fix their CE issues.
+#+DESIRED_Entries = "CMSHTPC_T2_US_UCSD_gw4_gpu,CMSHTPC_T2_US_UCSD_gw7_gpu,HCC_US_Omaha_crane_gpu,CMS_T2_US_Vanderbilt_ce3_gpu,CMS_T2_US_Vanderbilt_ce4_gpu"
++DESIRED_Entries = "CMSHTPC_T2_US_UCSD_gw4_gpu,CMSHTPC_T2_US_UCSD_gw7_gpu,HCC_US_Omaha_crane_gpu"
+requirements = stringListMember(GLIDEIN_Entry_Name, DESIRED_Entries)
+
+request_memory = 4 Gb
+request_cpus = 1
+request_gpus = 1
+
+# Singularity settings
++SingularityAutoLoad = False
++SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/tensorflow-gpu:latest"
+# Extra attributes
++SingularityBindGPULibs = True
++SingularityBindCVMFS = True
+
+# Request 1 job
+Queue 1
