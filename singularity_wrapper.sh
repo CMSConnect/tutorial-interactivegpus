@@ -97,7 +97,7 @@ EOF
 }
 
 if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
-    
+
     if [ "x$_CONDOR_JOB_AD" = "x" ]; then
         export _CONDOR_JOB_AD="NONE"
     fi
@@ -196,8 +196,10 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
             OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --contain"
         fi
 
+        # mmascher: adding /etc/hosts because of https://github.com/sylabs/singularity/issues/1707
         # Various possible mount points to pull into the container:
-        for VAR in /storage /lfs_roots /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
+        #for VAR in /storage /lfs_roots /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF /etc/hosts; do
+        for VAR in /storage /lfs_roots /cms /hadoop /hdfs /mnt/hadoop /etc/hosts; do
             if [ -e "$VAR" ]; then
                 OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --bind $VAR"
             fi
@@ -232,10 +234,10 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
             echo "Fatal worker node (`hostname` @ $CMSSITE) error: $OSG_SINGULARITY_IMAGE does not exist"
             /bin/sh -c 'exec -a "Fail due to missing singualrity image; sleep" sleep 20m'
 
-	    #ddavila: we need to tell condor to put the job back in the queue by creating
-	    # a file in the PATH pointed by $_CONDOR_WRAPPER_ERROR_FILE
-	    echo "Wrapper script failed, singularity binary not found" > $_CONDOR_WRAPPER_ERROR_FILE
-	    exit 1
+        #ddavila: we need to tell condor to put the job back in the queue by creating
+        # a file in the PATH pointed by $_CONDOR_WRAPPER_ERROR_FILE
+        echo "Wrapper script failed, singularity binary not found" > $_CONDOR_WRAPPER_ERROR_FILE
+        exit 1
         fi
 
         # Have the singularity wrapper scripts sit inside singularity.opensciencegrid.org.
@@ -245,27 +247,26 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
         cd /cvmfs/singularity.opensciencegrid.org
 
         export OSG_SINGULARITY_REEXEC=1
-	if [ -e $OSG_SINGULARITY_PATH ]; then
-	        exec $OSG_SINGULARITY_PATH exec $OSG_SINGULARITY_EXTRA_OPTS \
-                                         --pwd /srv \
+    if [ -e $OSG_SINGULARITY_PATH ]; then
+            exec $OSG_SINGULARITY_PATH exec $OSG_SINGULARITY_EXTRA_OPTS \
                                          --ipc --pid \
                                         "$OSG_SINGULARITY_IMAGE" \
                                         /srv/.osgvo-user-job-wrapper.sh \
                                         "${CMD[@]}"
-	else
-		#ddavila: Singularity binary has disappear from some reason, we need to tell condor to put the
-		# job back in the queue by creating a file in the PATH pointed by $_CONDOR_WRAPPER_ERROR_FILE
-		echo "Wrapper script failed, singularity binary not found" > $_CONDOR_WRAPPER_ERROR_FILE
+    else
+        #ddavila: Singularity binary has disappear from some reason, we need to tell condor to put the
+        # job back in the queue by creating a file in the PATH pointed by $_CONDOR_WRAPPER_ERROR_FILE
+        echo "Wrapper script failed, singularity binary not found" > $_CONDOR_WRAPPER_ERROR_FILE
 
-		#ddavila: propagate an error log to the job's log.
-		echo "Wrapper script failed, singularity binary not found, creating file: "$_CONDOR_WRAPPER_ERROR_FILE >&2
+        #ddavila: propagate an error log to the job's log.
+        echo "Wrapper script failed, singularity binary not found, creating file: "$_CONDOR_WRAPPER_ERROR_FILE >&2
 
-		#ddavila: prevent a black whole by sleeping 20 minutes before exiting.
-		# Eventually the periodic validation of singularity will make the pilot
-		# to stop matching new payloads
-		sleep 20m
-		exit 1
-	fi
+        #ddavila: prevent a black whole by sleeping 20 minutes before exiting.
+        # Eventually the periodic validation of singularity will make the pilot
+        # to stop matching new payloads
+        sleep 20m
+        exit 1
+    fi
     fi
 
 else
@@ -318,7 +319,7 @@ else
     if [ "x$TZ" = "x" ]; then
         export TZ="UTC"
     fi
-fi 
+fi
 
 
 #############################################################################
